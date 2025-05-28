@@ -39,7 +39,7 @@ The system should:
 ## 📁 Project Structure
 Running Locally
 1. Clone the repository - 
-git clone https://github.com/jatin283/identity_assignment
+git clone [https://github.com/jatin283/identity_assignment](https://github.com/jatin283/identity_assignment.git)
 cd identity_assignment
 
 2. Set up environment variables
