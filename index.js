@@ -7,14 +7,39 @@ const app = express();
 const PORT = 5000;
 app.use(bodyParser.json());   
 
-const db = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT,
-  ssl: process.env.DB_SSL === 'true'
+// const db = new Pool({
+//   user: process.env.DB_USER,
+//   host: process.env.DB_HOST,
+//   database: process.env.DB_NAME,
+//   password: process.env.DB_PASSWORD,
+//   port: process.env.DB_PORT,
+//   ssl: process.env.DB_SSL === 'true'
+// });
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false,
+  },
 });
+
+pool.query(`
+  CREATE TABLE IF NOT EXISTS contacts (
+    id SERIAL PRIMARY KEY,
+    phoneNumber VARCHAR(20),
+    email VARCHAR(255),
+    linkedId INTEGER REFERENCES contacts(id),
+    linkPrecedence VARCHAR(10) CHECK (linkPrecedence IN ('primary', 'secondary')),
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deletedAt TIMESTAMP
+  );
+`).then(() => {
+  console.log("Table created or already exists");
+}).catch(err => {
+  console.error("Failed to create table:", err);
+});
+
 
 app.post('/identify', async (req, res) => {
   const { email, phoneNumber } = req.body;
