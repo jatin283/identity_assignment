@@ -16,11 +16,15 @@ app.use(bodyParser.json());
 //   ssl: process.env.DB_SSL === 'true'
 // });
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false,
-  },
+  ...(isProduction && {
+    ssl: {
+      rejectUnauthorized: false,
+    },
+  }),
 });
 
 pool.query(`
@@ -50,7 +54,7 @@ app.post('/identify', async (req, res) => {
 
   try {
     // Fetch contacts that match either email or phone number
-    const { rows: matchedContacts } = await db.query(
+    const { rows: matchedContacts } = await pool.query(
       `SELECT * FROM contacts WHERE email = $1 OR "phoneNumber" = $2`,
       [email, phoneNumber]
     );
@@ -59,7 +63,7 @@ app.post('/identify', async (req, res) => {
 
     // If no matches at all, insert a new primary contact
     if (matchedContacts.length === 0) {
-      const { rows } = await db.query(
+      const { rows } = await pool.query(
         `INSERT INTO contacts (email, "phoneNumber", "linkPrecedence")
          VALUES ($1, $2, 'primary') RETURNING *`,
         [email, phoneNumber]
@@ -79,7 +83,7 @@ app.post('/identify', async (req, res) => {
         const newer = emailMatch.id === older.id ? phoneMatch : emailMatch;
 
         // Update newer to be secondary linked to older
-        await db.query(
+        await pool.query(
           `UPDATE contacts SET "linkPrecedence" = 'secondary', "linkedId" = $1, "updatedAt" = CURRENT_TIMESTAMP WHERE id = $2`,
           [older.id, newer.id]
         );
@@ -99,7 +103,7 @@ app.post('/identify', async (req, res) => {
         );
 
         if (!exists) {
-          await db.query(
+          await pool.query(
             `INSERT INTO contacts (email, "phoneNumber", "linkPrecedence", "linkedId")
              VALUES ($1, $2, 'secondary', $3)`,
             [email, phoneNumber, primaryContact.id]
@@ -108,7 +112,7 @@ app.post('/identify', async (req, res) => {
       }
     }
     // Fetch all contacts linked to the primary contact
-    const { rows: linkedContacts } = await db.query(
+    const { rows: linkedContacts } = await pool.query(
       `SELECT * FROM contacts WHERE id = $1 OR "linkedId" = $1`,
       [primaryContact.id]
     );
