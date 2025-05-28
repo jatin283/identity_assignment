@@ -82,7 +82,6 @@ app.post('/identify', async (req, res) => {
         }
       }
     }
-
     // Fetch all contacts linked to the primary contact
     const { rows: linkedContacts } = await db.query(
       `SELECT * FROM contacts WHERE id = $1 OR "linkedId" = $1`,
@@ -110,6 +109,11 @@ app.post('/identify', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+app.get("/", (req, res) => {
+  res.send("Backend is running!");
+});
+
 
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
