@@ -30,19 +30,15 @@ const pool = new Pool({
 pool.query(`
   CREATE TABLE IF NOT EXISTS contacts (
     id SERIAL PRIMARY KEY,
-    phoneNumber VARCHAR(20),
+    "phoneNumber" VARCHAR(20),
     email VARCHAR(255),
-    linkedId INTEGER REFERENCES contacts(id),
-    linkPrecedence VARCHAR(10) CHECK (linkPrecedence IN ('primary', 'secondary')),
-    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    deletedAt TIMESTAMP
+    "linkedId" INTEGER REFERENCES contacts(id),
+    "linkPrecedence" VARCHAR(10) CHECK ("linkPrecedence" IN ('primary', 'secondary')),
+    "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "deletedAt" TIMESTAMP
   );
-`).then(() => {
-  console.log("Table created or already exists");
-}).catch(err => {
-  console.error("Failed to create table:", err);
-});
+`)
 
 
 app.post('/identify', async (req, res) => {
